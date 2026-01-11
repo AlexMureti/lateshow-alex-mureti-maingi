@@ -1,7 +1,11 @@
-from pathlib import Path
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+metadata = MetaData(
+    naming_convention={
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s"
+    }
+)
 
-class Config:
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{BASE_DIR}/app.db"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  
+db = SQLAlchemy(metadata=metadata)

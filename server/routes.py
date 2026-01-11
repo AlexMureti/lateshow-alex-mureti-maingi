@@ -1,7 +1,31 @@
-from flask import Blueprint,jsonify
+from flask import current_app as app, request, jsonify
+from . import db
+from .models import Episode, Guest, Appearance
 
-api = Blueprint("api", __name__)
+@app.route("/episodes")
+def get_episodes():
+    episodes = Episode.query.all()
+    return jsonify([{"id": e.id, "date": e.date, "number": e.number} for e in episodes])
 
-@api.route("/")
-def home():
-    return jsonify({"message": "Late show API is running"})
+@app.route("/episodes/<int:id>")
+def get_episode(id):
+    e = Episode.query.get(id)
+    if not e:
+        return jsonify({"error": "Episode not found"}), 404
+    return jsonify(e.to_dict())
+
+@app.route("/guests")
+def get_guests():
+    guests = Guest.query.all()
+    return jsonify([g.to_dict() for g in guests])
+
+@app.route("/appearances", methods=["POST"])
+def create_appearance():
+    data = request.get_json()
+    try:
+        new_app = Appearance(rating=data["rating"], episode_id=data["episode_id"], guest_id=data["guest_id"])
+        db.session.add(new_app)
+        db.session.commit()
+        return jsonify(new_app.to_dict()), 201
+    except Exception as e:
+        return jsonify({"errors": [str(e)]}), 400
