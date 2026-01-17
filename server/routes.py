@@ -1,31 +1,45 @@
-from flask import current_app as app, request, jsonify
+from flask import Blueprint, request, jsonify
 from . import db
 from .models import Episode, Guest, Appearance
 
-@app.route("/episodes")
+bp = Blueprint('main', __name__)
+
+
+@bp.route("/episodes", methods=["GET"])
 def get_episodes():
     episodes = Episode.query.all()
-    return jsonify([{"id": e.id, "date": e.date, "number": e.number} for e in episodes])
+    return jsonify([e.to_dict() for e in episodes])
 
-@app.route("/episodes/<int:id>")
+
+@bp.route("/episodes/<int:id>", methods=["GET"])
 def get_episode(id):
-    e = Episode.query.get(id)
-    if not e:
+    episode = Episode.query.get(id)
+    if not episode:
         return jsonify({"error": "Episode not found"}), 404
-    return jsonify(e.to_dict())
+    return jsonify(episode.to_dict(include_appearances=True))
 
-@app.route("/guests")
+
+@bp.route("/guests", methods=["GET"])
 def get_guests():
     guests = Guest.query.all()
     return jsonify([g.to_dict() for g in guests])
 
-@app.route("/appearances", methods=["POST"])
+
+@bp.route("/appearances", methods=["POST"])
 def create_appearance():
     data = request.get_json()
     try:
-        new_app = Appearance(rating=data["rating"], episode_id=data["episode_id"], guest_id=data["guest_id"])
-        db.session.add(new_app)
+        new_appearance = Appearance(
+            rating=data.get("rating"),
+            episode_id=data.get("episode_id"),
+            guest_id=data.get("guest_id")
+        )
+        db.session.add(new_appearance)
         db.session.commit()
-        return jsonify(new_app.to_dict()), 201
+        return jsonify(new_appearance.to_dict()), 201
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({"errors": [str(e)]}), 400
     except Exception as e:
+        db.session.rollback()
         return jsonify({"errors": [str(e)]}), 400
