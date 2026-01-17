@@ -8,7 +8,10 @@ bp = Blueprint('main', __name__)
 @bp.route("/episodes", methods=["GET"])
 def get_episodes():
     episodes = Episode.query.all()
-    return jsonify([e.to_dict() for e in episodes])
+    result = []
+    for episode in episodes:
+        result.append(episode.to_dict())
+    return jsonify(result)
 
 
 @bp.route("/episodes/<int:id>", methods=["GET"])
@@ -22,7 +25,10 @@ def get_episode(id):
 @bp.route("/guests", methods=["GET"])
 def get_guests():
     guests = Guest.query.all()
-    return jsonify([g.to_dict() for g in guests])
+    result = []
+    for guest in guests:
+        result.append(guest.to_dict())
+    return jsonify(result)
 
 
 @bp.route("/appearances", methods=["POST"])

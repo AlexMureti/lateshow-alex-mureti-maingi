@@ -13,9 +13,16 @@ class Episode(db.Model):
     )
 
     def to_dict(self, include_appearances=False):
-        data = {"id": self.id, "date": self.date, "number": self.number}
+        data = {
+            "id": self.id,
+            "date": self.date,
+            "number": self.number
+        }
         if include_appearances:
-            data["appearances"] = [a.to_dict() for a in self.appearances]
+            appearances_list = []
+            for appearance in self.appearances:
+                appearances_list.append(appearance.to_dict())
+            data["appearances"] = appearances_list
         return data
 
 class Guest(db.Model):
